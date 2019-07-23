@@ -1,3 +1,4 @@
+import argparse
 import csv
 
 import numpy as np
@@ -7,20 +8,21 @@ from sklearn.metrics.classification import classification_report
 from sklearn.model_selection import train_test_split
 
 
-def pre_process_micro_kol_profile(micro_kol):
+def process_each(item):
     # return features for this micro_kol
     # field 0, field 1, field 2, 3 and label 0 and 1
-    return [int(micro_kol[-3]), int(micro_kol[-2])], [int(micro_kol[-1])]
+    # todo: further data normalization
+    return [int(item[-3]), int(item[-2])], [int(item[-1])]
 
 
-def load_data(csv_file_path):
+def load_data(train_data_path):
     # TODO: validate the input file
     X = []
     y = []
-    with open(csv_file_path, 'rb') as f:
+    with open(train_data_path, 'rb') as f:
         reader = csv.reader(f)
-        for row in reader:
-            item_x, item_y = pre_process_micro_kol_profile(row)
+        for item in reader:
+            item_x, item_y = process_each(item)
             X.append(item_x)
             y.append(item_y)
     return np.array(X), np.array(y)
@@ -44,16 +46,18 @@ def predict(model: LogisticRegression, X):
     return model.predict_log_proba(X)
 
 
-def main(csv_file_path):
-    X, y = load_data(csv_file_path)
+def main(train_data_path: str, model_path: str):
+    X, y = load_data(train_data_path)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     lr = train_model(X_train, y_train)
     report = test_model(lr, X_test, y_test)
     print(report)
-    # save the model
-    joblib.dump(lr, 'attractness_lr.pkl')
+    joblib.dump(lr, model_path)
 
 
 if __name__ == '__main__':
-    # todo: change to a configurable parameter
-    main('/sample.csv')
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--train_data_path', required=True)
+    parser.add_argument('--model_path', required=True)
+    args = parser.parse_args()
+    main(train_data_path=args.train_data_path, model_path=args.model_path)

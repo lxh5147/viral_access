@@ -8,18 +8,28 @@ from sklearn.metrics.classification import classification_report
 from sklearn.model_selection import train_test_split
 
 
+def to_int(s):
+    try:
+        return int(s)
+    except ValueError:
+        return int(float(s))
+
+
 def process_each(item):
     # return features for this micro_kol
     # field 0, field 1, field 2, 3 and label 0 and 1
     # todo: further data normalization
-    return [int(item[-3]), int(item[-2])], [int(item[-1])]
+    item_x = [to_int(item[-5]), to_int(item[-4]), to_int(item[-3]), to_int(item[-2])]
+    # item_y can be 0, 1
+    item_y = to_int(item[-1])
+    return item_x, item_y
 
 
 def load_data(train_data_path):
     # TODO: validate the input file
     X = []
     y = []
-    with open(train_data_path, 'rb') as f:
+    with open(train_data_path) as f:
         reader = csv.reader(f)
         for item in reader:
             item_x, item_y = process_each(item)
@@ -30,6 +40,7 @@ def load_data(train_data_path):
 
 # train and validate the logistic regression model
 def train_model(X, y):
+    # todo: use explicit arguments
     lr = LogisticRegression()
     lr.fit(X, y)
     return lr
@@ -48,7 +59,8 @@ def predict(model: LogisticRegression, X):
 
 def main(train_data_path: str, model_path: str):
     X, y = load_data(train_data_path)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    # todo: run cross validation
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
     lr = train_model(X_train, y_train)
     report = test_model(lr, X_test, y_test)
     print(report)
@@ -56,6 +68,7 @@ def main(train_data_path: str, model_path: str):
 
 
 if __name__ == '__main__':
+    # example usage: micro_kol_attract_degree_estimator.py --model_path test.pkl --train_data_path sample.csv
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data_path', required=True)
     parser.add_argument('--model_path', required=True)

@@ -38,12 +38,13 @@ def process_each(item, stemmer: WordNetLemmatizer):
 
 
 def load_data(train_data_path):
+    stemmer = WordNetLemmatizer()
     documents = []
     y = []
     with open(train_data_path) as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f,delimiter ="\t")
         for item in reader:
-            item_x, item_y = process_each(item)
+            item_x, item_y = process_each(item,stemmer)
             documents.append(item_x)
             y.append(item_y)
 
@@ -91,7 +92,7 @@ def main(train_data_path: str, model_path: str):
 
 
 if __name__ == '__main__':
-    # example usage: micro_kol_attract_degree_estimator.py --model_path test.pkl --train_data_path sample.csv
+    # example usage: micro_kol_attract_degree_estimator.py --model_path region.pkl --train_data_path kol_region_sample.csv
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data_path', required=True)
     parser.add_argument('--model_path', required=True)

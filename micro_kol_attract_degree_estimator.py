@@ -44,11 +44,16 @@ def predict(model: LogisticRegression, X):
     return model.predict_log_proba(X)
 
 
-def main():
-    X, y = load_data()
+def main(csv_file_path):
+    X, y = load_data(csv_file_path)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     lr = train_model(X_train, y_train)
     report = test_model(lr, X_test, y_test)
     print(report)
     # save the model
     joblib.dump(lr, 'attractness_lr.pkl')
+
+
+if __name__ == '__main__':
+    # todo: change to a configurable parameter
+    main('/sample.csv')

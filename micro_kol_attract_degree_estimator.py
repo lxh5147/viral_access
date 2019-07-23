@@ -4,7 +4,7 @@ import csv
 import numpy as np
 from sklearn.externals import joblib
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics.classification import classification_report
+from sklearn.metrics.classification import classification_report, confusion_matrix, accuracy_score
 from sklearn.model_selection import train_test_split
 
 
@@ -40,21 +40,26 @@ def load_data(train_data_path):
 
 # train and validate the logistic regression model
 def train_model(X, y):
-    # todo: use explicit arguments
-    lr = LogisticRegression()
-    lr.fit(X, y)
-    return lr
+    # todo: use explicit arguments or use grid search
+    # GridSearchCV
+    classifier = LogisticRegression()
+    classifier.fit(X, y)
+    return classifier
 
 
-def test_model(model: LogisticRegression, X, y):
-    y_pred = model.predict(X)
-    return classification_report(y, y_pred)
-
+def test_model(classifier, X, y):
+    y_pred = classifier.predict(X)
+    conf_matrix = confusion_matrix(y, y_pred)
+    accuracy=accuracy_score(y, y_pred)
+    report = classification_report(y, y_pred)
+    print( conf_matrix)
+    print(report)
+    print(accuracy)
 
 # run the prediction
-def predict(model: LogisticRegression, X):
+def predict(classifier, X):
     # prediction the probability of label 0 and 1
-    return model.predict_log_proba(X)
+    return classifier.predict_log_proba(X)
 
 
 def main(train_data_path: str, model_path: str):
@@ -62,8 +67,7 @@ def main(train_data_path: str, model_path: str):
     # todo: run cross validation
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
     lr = train_model(X_train, y_train)
-    report = test_model(lr, X_test, y_test)
-    print(report)
+    test_model(lr, X_test, y_test)
     joblib.dump(lr, model_path)
 
 

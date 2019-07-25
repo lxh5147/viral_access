@@ -2,7 +2,12 @@ import argparse
 import csv
 import re
 
+import nltk
 import numpy as np
+
+nltk.download('stopwords')
+nltk.download('wordnet')
+
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.ensemble import RandomForestClassifier
@@ -42,9 +47,9 @@ def load_data(train_data_path):
     documents = []
     y = []
     with open(train_data_path) as f:
-        reader = csv.reader(f,delimiter ="\t")
+        reader = csv.reader(f)
         for item in reader:
-            item_x, item_y = process_each(item,stemmer)
+            item_x, item_y = process_each(item, stemmer)
             documents.append(item_x)
             y.append(item_y)
 

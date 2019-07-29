@@ -12,8 +12,8 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
+
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.classification import classification_report, confusion_matrix, accuracy_score
 from sklearn.model_selection import train_test_split
 
@@ -42,8 +42,7 @@ def process_each(item, stemmer: WordNetLemmatizer):
     return document, item_y
 
 
-def load_data(train_data_path):
-    stemmer = WordNetLemmatizer()
+def load_data(train_data_path, stemmer: WordNetLemmatizer, vectorizer: TfidfVectorizer):
     documents = []
     y = []
     with open(train_data_path) as f:
@@ -53,12 +52,7 @@ def load_data(train_data_path):
             documents.append(item_x)
             y.append(item_y)
 
-    # tfidf based bag of words model
-    vectorizer = CountVectorizer(max_features=15000, ngram_range=[1, 2], min_df=5, max_df=0.7,
-                                 stop_words=stopwords.words('english'))
     X = vectorizer.fit_transform(documents).toarray()
-    tfidfconverter = TfidfTransformer()
-    X = tfidfconverter.fit_transform(X).toarray()
     y = np.array(y)
     return X, y
 
@@ -82,18 +76,31 @@ def test_model(classifier, X, y):
 
 
 # run the prediction
-def predict(classifier, X):
+def predict(classifier, document, stemmer: WordNetLemmatizer, vectorizer: TfidfVectorizer):
     # prediction the region id
-    return classifier.predict(X)
+    # the language id does not matter
+    item = ['-1', document]
+    item_x, _ = process_each(item, stemmer)
+    documents = [item_x]
+    X = vectorizer.transform(documents)
+    return classifier.predict(X)[0]
 
 
 def main(train_data_path: str, model_path: str):
-    X, y = load_data(train_data_path)
+    stemmer = WordNetLemmatizer()
+    # tfidf based bag of words model
+    vectorizer = TfidfVectorizer(max_features=15000, ngram_range=[1, 2], min_df=5, max_df=0.7,
+                                 stop_words=stopwords.words('english'))
+    X, y = load_data(train_data_path, stemmer, vectorizer)
     # todo: run cross validation
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
-    lr = train_model(X_train, y_train)
-    test_model(lr, X_test, y_test)
-    joblib.dump(lr, model_path)
+    classifier = train_model(X_train, y_train)
+    test_model(classifier, X_test, y_test)
+    joblib.dump(classifier, model_path)
+    # run prediction< we need the classifier, the stemmer, and the vectorizer
+    print('run prediction for a sample KOL')
+    region_id = predict(classifier, 'I like china.', stemmer, vectorizer)
+    print(region_id)
 
 
 if __name__ == '__main__':
